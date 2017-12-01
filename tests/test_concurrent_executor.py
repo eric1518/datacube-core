@@ -11,7 +11,7 @@ DATA = [1, 2, 3, 4]
 
 def _echo(x, please_fail=False):
     if please_fail or x == 'please fail':
-        raise IOError('Fake I/O error, cause you asked')
+        raise ValueError('Fake value error, cause you asked')
     return x
 
 
@@ -30,6 +30,7 @@ def run_tests_for_runner(runner, sleep_amount=0.5):
     sleep(sleep_amount)  # give it "enough" time to finish
     completed, failed, pending = runner.get_ready(futures)
     if sleep_amount:
+        assert len(pending) == 0  # If it's not your sleep_amount isn't long enough
         assert len(failed) == 1
     else:
         assert len(failed) in [0, 1]
@@ -47,7 +48,7 @@ def run_tests_for_runner(runner, sleep_amount=0.5):
     future = runner.submit(_echo, "", please_fail=True)
 
     for ff in runner.as_completed([future]):
-        with pytest.raises(IOError):
+        with pytest.raises(ValueError):
             runner.result(ff)
 
     # Next completed with data
@@ -68,11 +69,11 @@ def run_tests_for_runner(runner, sleep_amount=0.5):
 def test_concurrent_executor():
     runner = get_executor(None, 2)
     assert str(runner).find('Multi') >= 0
-    run_tests_for_runner(runner, 0.3)
+    run_tests_for_runner(runner, 0.7)
 
     runner = get_executor(None, 2, use_cloud_pickle=False)
     assert str(runner).find('Multi') >= 0
-    run_tests_for_runner(runner, 0.3)
+    run_tests_for_runner(runner, 0.7)
 
 
 def test_fallback_executor():
